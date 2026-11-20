@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>计提平台 · 广告-API 接入 Demo</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font:13px/1.6 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif;color:#1f2329;background:#f0f2f5;display:flex;height:100vh}
+:root{--p:#4361ee;--pl:#eef1fd;--b:#f0f0f0;--g:#8c8c8c;--ok:#52c41a;--warn:#faad14;--err:#ff4d4f}
+aside{width:200px;background:#0f1a2e;color:#c9d1e0;flex-shrink:0;display:flex;flex-direction:column}
+aside .logo{height:48px;display:flex;align-items:center;justify-content:center;gap:8px;color:#fff;font-weight:600;font-size:15px;border-bottom:1px solid #1d2a44}
+aside .logo i{background:#ff6900;color:#fff;font-style:normal;font-size:11px;border-radius:5px;padding:1px 4px}
+aside .grp{padding:12px 16px 4px;font-size:13px;color:#e6eaf2}
+aside a{display:block;margin:2px 8px;padding:7px 12px 7px 26px;cursor:pointer;border-radius:6px;color:#c9d1e0}
+aside a.on{background:var(--p);color:#fff}
+.wrap{flex:1;display:flex;flex-direction:column;min-width:0}
+header{height:48px;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid #e8e8e8;color:#595959}
+header .u{display:flex;align-items:center;gap:8px;font-size:12px}
+header .u b{width:26px;height:26px;border-radius:50%;background:var(--p);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:500}
+main{flex:1;overflow:auto;padding:12px 12px 70px}
+.page{background:#fff;border-radius:6px;padding:16px 20px;min-height:100%;overflow-x:auto}
+h2{font-size:17px;font-weight:600;margin-bottom:4px}
+.sub{color:var(--g);font-size:12px;margin-bottom:12px}
+.card{border:1px solid #f0f0f0;border-radius:6px;margin-bottom:14px}
+.card>.hd{padding:12px 16px;border-bottom:1px solid #f0f0f0;font-weight:600;display:flex;justify-content:space-between}
+.card>.bd{padding:14px 16px}
+.tabs{display:flex;gap:24px;border-bottom:1px solid #f0f0f0;margin-bottom:14px}
+.tabs div{padding:8px 0;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs div.on{color:var(--p);border-color:var(--p);font-weight:500}
+.tabs div.lock{color:#c9cdd4;cursor:not-allowed}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px 20px}
+.f{display:flex;flex-direction:column;gap:4px}
+.f label{font-size:12px;color:#262626}
+.f label em{color:var(--err);font-style:normal;margin-right:2px}
+.fi{display:flex;align-items:center;gap:6px}
+.fi label{white-space:nowrap;font-size:12px}
+input,select{border:1px solid #d9d9d9;border-radius:4px;padding:4px 8px;font-size:12px;height:28px;background:#fff;width:100%}
+input:disabled{background:#f5f5f5;color:#8c8c8c}
+input.amt{width:120px;text-align:right}
+button{border:1px solid #d9d9d9;background:#fff;padding:0 14px;height:28px;border-radius:4px;cursor:pointer;font-size:12px;white-space:nowrap}
+button.pri{background:var(--p);border-color:var(--p);color:#fff}
+button.link{border:none;background:none;color:var(--p);padding:0 4px;height:auto}
+button.link.d{color:var(--err)}
+button:disabled{opacity:.45;cursor:not-allowed}
+.row{display:flex;gap:10px;align-items:center}
+.sp{flex:1}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th,td{padding:7px 10px;border-bottom:1px solid #f0f0f0;text-align:left;white-space:nowrap}
+th{background:#fafafa;color:#262626;font-weight:500}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+td.x{width:34px;text-align:center;cursor:pointer;color:#595959;font-size:14px}
+tr.agg{background:#f0f5ff;font-weight:500}
+tr.det td{color:#595959}
+tr.chg td{background:#fffbe6}
+.tag{display:inline-block;padding:0 7px;border-radius:4px;font-size:12px;border:1px solid #d9d9d9;background:#fafafa;margin:1px 2px;line-height:20px}
+.tag.p{background:#f0f5ff;border-color:#adc6ff;color:#2f54eb}
+.tag.ok{background:#f6ffed;border-color:#b7eb8f;color:#389e0d}
+.tag.w{background:#fff7e6;border-color:#ffd591;color:#d46b08}
+.tag.b{background:#e6f4ff;border-color:#91caff;color:#0958d9}
+.alert{padding:7px 12px;border-radius:4px;margin-bottom:12px;font-size:12px;border:1px solid #91caff;background:#e6f4ff}
+.alert.ok{border-color:#b7eb8f;background:#f6ffed}
+.steps{display:flex;align-items:center;margin:10px 0 14px}
+.steps .s{display:flex;align-items:center;gap:6px;color:#8c8c8c;white-space:nowrap}
+.steps .s.on{color:var(--p);font-weight:500}
+.steps .s.done{color:#262626}
+.steps .ln{flex:1;height:1px;background:#d9d9d9;margin:0 12px}
+.steps .ln.done{background:var(--p)}
+.stat{display:flex;gap:40px;margin:4px 0 12px}
+.stat small{color:var(--g);font-size:12px}
+.stat b{display:block;font-size:18px;font-weight:500}
+.bar{position:fixed;left:200px;right:0;bottom:0;height:50px;background:#fff;border-top:1px solid #e8e8e8;display:flex;align-items:center;justify-content:space-between;padding:0 24px;z-index:5}
+.pg{display:flex;justify-content:flex-end;gap:8px;align-items:center;margin-top:10px;color:#595959;font-size:12px}
+.pg b{border:1px solid var(--p);color:var(--p);border-radius:4px;padding:0 7px;font-weight:400}
+.mask{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:9}
+.mask.on{display:flex}
+.modal{background:#fff;border-radius:8px;width:460px;padding:20px 24px}
+.modal h3{font-size:15px;margin-bottom:14px}
+.modal .f{margin-bottom:12px}
+.err{color:var(--err);font-size:12px;min-height:18px}
+.foot{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+.demo{position:fixed;right:16px;bottom:62px;background:#1f2329;color:#fff;padding:6px 10px;border-radius:6px;font-size:12px;opacity:.88;z-index:6;display:flex;gap:6px;align-items:center}
+.demo select{background:#333;color:#fff;border-color:#555;width:auto}
+.muted{color:var(--g)}
+.new{color:#d4380d;font-size:11px;margin-left:4px}
+.ms{display:inline-flex;flex-wrap:wrap;align-items:center;gap:0;border:1px solid #d9d9d9;border-radius:4px;padding:1px 22px 1px 2px;position:relative;cursor:pointer;min-width:120px;background:#fff}
+.ms .caret{position:absolute;right:6px;color:#8c8c8c;font-size:11px}
+td{position:relative}
+.pop{position:absolute;left:10px;top:38px;z-index:8;width:340px;background:#fff;border-radius:6px;box-shadow:0 6px 16px rgba(0,0,0,.15);padding:8px;white-space:normal}
+.pop label{display:flex;gap:8px;align-items:center;padding:3px 4px;cursor:pointer}
+.pop input[type=checkbox]{width:auto;height:auto}
+.ri{display:inline-block;padding:0 6px;border-radius:4px;background:#f9f0ff;border:1px solid #d3adf7;color:#531dab;font-size:12px;line-height:20px}
+.alert.w{border-color:#ffd591;background:#fff7e6}
+.tag.e{background:#fff1f0;border-color:#ffa39e;color:#cf1322}
+</style>
+</head>
+<body>
+<aside>
+  <div class="logo"><i>mi</i>计提平台</div>
+  <div class="grp">▦ 工作台</div><a data-p="records">计提记录</a>
+  <div class="grp">▤ 计提管理</div><a data-p="accrual">收入计提</a><a data-p="rebate">返点计提</a>
+  <div class="grp">▥ 基础数据</div><a data-p="contract">合同管理</a>
+  <div class="grp">⚙ 系统设置</div><a data-p="config">配置管理</a><a data-p="user">用户管理</a>
+</aside>
+<div class="wrap">
+  <header><span id="crumb"></span><div class="u"><b>w</b><div>wangyixuan<br><span class="muted">超级管理员</span></div></div></header>
+  <main><div class="page" id="main"></div></main>
+</div>
+<div id="bar"></div>
+<div class="mask" id="mask"><div class="modal" id="modal"></div></div>
+<div class="demo">演示角色
+  <select id="roleSel"><option value="all">超管（两条业务线）</option><option value="api">广告-API 运营</option><option value="miads">广告-Miads 运营</option></select>
+</div>
+
+<script>
+// ================= Mock =================
+const ME='wangyixuan@xiaomi.com';
+const BIZ={miads:'广告-Miads',api:'广告-API'};
+const ROLES={all:['miads','api'],api:['api'],miads:['miads']};
+const RATE={USD:1,EUR:0.92,INR:84.1};
+let role='all';
+const SEATS=[['nextsmart_rtb_ssp','Nextsmart',1],['nextsmart_rtb_wps','Nextsmart',1],['nextsmart_rtb','Nextsmart',1],['yidian','Yidian',1],['yidian_rtb','Yidian',1],['minigo','Minigo',1],['bigo_ads','BIGO',1],['adtiming','AdTiming',0],['appier_rtb','Appier',1],['topon_rtb','topon',1],['vungle_rtb','vungle_rtb',1],['magnite_rtb','magnite_rtb',1],['Iflytec_rtb_ssp','Iflytec',1],['smadex_rtb','smadex_rtb',1]];
+let sel=new Set(),msOpen=null;
+function msPop(c){return `<div class="pop"><input placeholder="搜索 seat / 公司名称" style="margin-bottom:6px"><div style="max-height:200px;overflow:auto">${SEATS.slice(0,8).map(x=>`<label><input type="checkbox" data-seat="${x[0]}" ${c.dsp.includes(x[0])?'checked':''}>${x[0]} - ${x[1]}${x[2]?'':' <span class="muted">（已关闭）</span>'}</label>`).join('')}</div><div class="muted" style="font-size:12px;padding:4px">选项来自丘比特 DSP 列表（含已关闭），至少选 1 个；勾选即保存，从下一次取数生效</div></div>`}
+
+const contractsApi=[
+  {code:'S003375',dsp:['nextsmart_rtb_ssp','nextsmart_rtb_wps','nextsmart_rtb'],ri:'revenue_valid',sales:'Tridev Deka',cur:'USD',by:ME,flag:'系统计提',t:'2026-12-01 10:02',ub:'system'},
+  {code:'S001283',dsp:['yidian','yidian_rtb'],ri:'revenue_3h',sales:'Zhang Wei',cur:'USD',by:ME,flag:'系统计提',t:'2026-12-01 10:02',ub:'system'},
+  {code:'S002918',dsp:['minigo'],ri:'revenue',sales:'Li Na',cur:'EUR',by:ME,flag:'手工计提',t:'2026-12-01 10:02',ub:'system'},
+  {code:'C2023-0412',dsp:['bigo_ads'],ri:'revenue_valid',sales:'Ravi Kumar',cur:'USD',by:ME,flag:'系统计提',t:'2026-12-01 00:00',ub:'system'},
+  {code:'C2022-1180',dsp:['adtiming'],ri:'revenue_valid',sales:'Ravi Kumar',cur:'EUR',by:'liukai@xiaomi.com',flag:'不计提',t:'2026-12-03 14:20',ub:ME},
+];
+const contractsMiads=[
+  {code:'S000588',acc:'1509',sales:'Tridev Deka',cur:'INR',by:'v-gongshiyang@xiaomi.com',flag:'系统计提',ind:'否',reb:'否',t:'2026-11-11 16:00',ub:'p-daizhijian@xiaomi.com'},
+  {code:'S000582',acc:'1488',sales:'Tridev Deka',cur:'INR',by:'v-gongshiyang@xiaomi.com',flag:'系统计提',ind:'否',reb:'否',t:'2026-11-10 14:39',ub:'p-daizhijian@xiaomi.com'},
+  {code:'S000578',acc:'1339',sales:'Tridev Deka',cur:'INR',by:'v-gongshiyang@xiaomi.com',flag:'系统计提',ind:'否',reb:'否',t:'2026-11-10 14:39',ub:'p-daizhijian@xiaomi.com'},
+];
+const RI=c=>(contractsApi.find(x=>x.code===c)||{}).ri||'revenue_valid';
+const COUNTRY=['ID','IN','BR','MX','RU'],MEDIA=['海外联盟业务-程序化','海外浏览器','海外应用商店'];
+let seed=7;const rnd=()=>{seed=(seed*9301+49297)%233280;return seed/233280};
+const r2=n=>Math.round(n*100)/100;
+const sum=(a,f)=>a.reduce((s,x)=>s+f(x),0);
+const fmt=n=>n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+const BIZ_ALL=['广告-Miads','广告-API','广告-云端预装','广告-SDK','预装-海外'];
+let formulas=[
+  {type:'近X天平均值预估',x:5,biz:['广告-Miads','广告-API'],upd:ME,t:'2026-12-02 10:21'},
+  {type:'日均推算',x:null,biz:[],upd:'system',t:'2026-12-01 00:00'},
+];
+const EXPR={'近X天平均值预估':'T-1实际累计 + 近X天日均 × 剩余天数','日均推算':'T-1实际累计 ÷ 已过天数 × 当月天数'};
+const formulaFor=(biz)=>formulas.find(f=>f.biz.includes(BIZ[biz]))||formulas[0];
+// 演示：T-1=12-10，已过10天，当月31天，近X天累计取最后X天
+function estimate(f,actual){const el=10,days=31;if(f.type==='日均推算')return r2(actual/el*days);const x=Math.min(f.x,el);const nearX=actual*x/el*(0.9+rnd()*0.2);return r2(actual+nearX/x*(days-el))}
+
+let sessions=[
+  {id:'s1',biz:'api',month:'2026-12',type:'当月预估',by:ME,status:'调整预估',t:'2026-12-11 19:40'},
+  {id:'s2',biz:'api',month:'2026-11',type:'当月预估',by:ME,status:'已推送',t:'2026-11-30 18:20'},
+  {id:'s3',biz:'api',month:'2026-10',type:'补计提',by:'liukai@xiaomi.com',status:'推送预览',t:'2026-12-02 11:05'},
+  {id:'s4',biz:'api',month:'2026-11',type:'当月预估',by:'liukai@xiaomi.com',status:'调整预估',t:'2026-11-30 21:10'},
+  {id:'m1',biz:'miads',month:'2026-11',type:'当月预估',by:'wangbin57@xiaomi.com',status:'已推送',t:'2026-11-10 15:18',off:'合并'},
+  {id:'m2',biz:'miads',month:'2026-11',type:'当月预估',by:'v-zhangzijing1@xiaomi.com',status:'扣除赔付',t:'2026-11-11 20:12',off:'拆分'},
+];
+let records=[
+  {id:'R20261130003',biz:'api',month:'2026-11',type:'收入计提',by:ME,c:4,d:7,i:16,amt:298430.11,st:'部分合同失败',t:'2026-11-30 18:20',
+   cs:[{code:'S001283',st:'失败',n:4,why:'媒体名称不存在 1 条',amt:70818.42},{code:'C2023-0412',st:'失败',n:3,why:'签名校验失败',amt:85476.76},{code:'S003375',st:'成功',n:6,why:'',amt:131786.33},{code:'S002918',st:'成功',n:3,why:'',amt:10348.60}],
+   dt:[['S001283','ID','海外浏览器',22410.05,'失败','媒体名称不存在'],['S001283','BR','海外应用商店',18200.37,'失败',''],['S001283','MX','海外浏览器',16522.00,'失败',''],['S001283','RU','海外联盟业务-程序化',13686.00,'失败',''],['C2023-0412','ID','海外应用商店',40210.76,'失败',''],['C2023-0412','IN','海外浏览器',30066.00,'失败',''],['C2023-0412','BR','海外浏览器',15200.00,'失败','']]},
+  {id:'R20261130001',biz:'api',month:'2026-11',type:'收入计提',by:ME,c:4,d:7,i:22,amt:412880.31,st:'推送成功',t:'2026-11-30 10:20'},
+  {id:'R20261130002',biz:'miads',month:'2026-11',type:'收入计提',by:ME,c:12,i:1158,amt:2164759.60,st:'推送成功',t:'2026-11-30 17:02'},
+];
+
+// 草稿：合同×DSP 聚合，明细 国家×媒体
+let drafts=[];
+function buildDrafts(){
+  seed=7;drafts=[];const f=formulaFor('api');
+  contractsApi.filter(c=>c.by===ME&&c.flag==='系统计提').forEach(c=>c.dsp.forEach(d=>{
+    const n=2+Math.floor(rnd()*3),used=new Set(),det=[];
+    while(det.length<n){const co=COUNTRY[Math.floor(rnd()*5)],m=MEDIA[Math.floor(rnd()*3)];if(used.has(co+m))continue;used.add(co+m);
+      const a=r2(800+rnd()*12000),e=estimate(f,a);det.push({country:co,media:m,actual:a,est:e,adj:e,reason:''});}
+    drafts.push({contract:c.code,cur:c.cur,ri:c.ri,dsp:d,det,open:false,reason:'',changed:false});
+  }));
+}
+
+// ================= 状态 =================
+let page='accrual',tab={accrual:'api',contract:'api',records:'api'},sess=null,step=0,cfgTab='formula',ff={biz:'',by:''},pv={};
+const allowed=()=>ROLES[role];
+const $=s=>document.querySelector(s);
+function curTab(k){if(!allowed().includes(tab[k]))tab[k]=allowed()[0];return tab[k]}
+function bizTabs(k,prefix=''){return `<div class="tabs">${['miads','api'].map(b=>allowed().includes(b)
+  ?`<div class="${tab[k]===b?'on':''}" data-tab="${k}:${b}">${prefix}${BIZ[b]}</div>`:`<div class="lock" title="无该 Tab 权限">${prefix}${BIZ[b]} 🔒</div>`).join('')}</div>`}
+
+function render(){
+  document.querySelectorAll('aside a').forEach(a=>a.classList.toggle('on',a.dataset.p===page));
+  $('#crumb').textContent={accrual:'收入计提',contract:'合同管理',records:'计提记录',config:'配置管理',rebate:'返点计提',user:'用户管理'}[page];
+  $('#bar').innerHTML='';
+  $('#main').innerHTML={accrual:rAccrual,contract:rContract,records:rRecords,config:rConfig,rebate:()=>`<h2>返点计提</h2><div class="alert">返点计提只属于广告-Miads，本期不变。</div>`,user:rUser}[page]();
+  bind();
+}
+function bar(l,r){$('#bar').innerHTML=`<div class="bar"><div>${l}</div><div class="row">${r}</div></div>`}
+
+// ================= 收入计提 =================
+function rAccrual(){
+  const b=curTab('accrual');
+  if(sess) return rSession();
+  const f=formulaFor(b);
+  const miads=b==='miads';
+  const form=`<div class="grid">
+    <div class="f"><label><em>*</em>计提类型</label><select><option>当月预估计提</option><option>补计提</option></select></div>
+    <div class="f"><label><em>*</em>计提月份</label><input value="2026-12" disabled></div>
+    ${miads?`<div class="f"><label><em>*</em>Offline 计提规则</label><select><option>合并计提</option></select></div><div class="f"><label>是否拆包</label><select><option>否</option></select></div>`:''}
+    <div class="f" style="grid-column:span 2"><label><em>*</em>计提人</label><input value="${ME}"></div>
+    <div class="f"><label>合同ID</label><input placeholder="可选"></div>
+    ${miads?`<div class="f"><label>包名</label><input placeholder="可选"></div><div class="f"><label>账户ID</label><input placeholder="可选"></div>`:`<div class="f"><label>DSP<span class="new">新</span></label><input placeholder="可选"></div>`}
+  </div>
+  <div class="row" style="margin-top:12px"><span class="muted">可选月份: 2026-12</span><span class="sp"></span><button class="pri" id="start">开始计提</button></div>`;
+  const list=sessions.filter(s=>s.biz===b&&s.status!=='已推送'&&s.status!=='已作废'&&!(s.type==='当月预估'&&s.month!=='2026-12'));
+  return `<h2>收入计提</h2><div class="sub">当月预估计提 / 补计提：筛选 → 取数 → 调整预估 → 人工补充(可选)${miads?' → 扣除赔付':''} → 推送 CRM</div>
+  ${bizTabs('accrual')}
+  <div class="card"><div class="hd">发起计提</div><div class="bd">${form}</div></div>
+  <div class="card"><div class="hd">进行中的计提(断点续作)<span class="muted" style="font-weight:400;font-size:12px">推送后的计提不在此展示，推送结果请到「<a style="color:#4361ee">计提记录</a>」查看</span></div><div class="bd" style="padding:0">
+  <table><tr><th>计提月份</th><th>计提类型</th><th>计提人</th><th>状态</th>${miads?'<th>Offline</th>':''}<th>更新时间</th><th>操作</th></tr>
+  ${list.map(s=>`<tr><td><b>${s.month}</b></td><td>${s.type}</td><td>${s.by}</td><td><span class="tag ${s.status==='已推送'?'ok':s.status==='推送预览'?'w':'b'}">${s.status}</span></td>${miads?`<td>${s.off}</td>`:''}<td>${s.t}</td>
+    <td><button class="link" data-cont="${s.id}">继续计提</button><button class="link d" data-void="${s.id}">作废</button></td></tr>`).join('')}</table></div></div>`;
+}
+const STEPS=['取数','调整预估','人工补充','推送预览'];const ICON=['🔍','✎','📄','☁'];
+function rSession(){
+  const steps=`<div class="steps">${STEPS.map((s,i)=>`${i?`<div class="ln ${i<=step?'done':''}"></div>`:''}<div class="s ${i===step?'on':i<step?'done':''}">${ICON[i]} ${s}</div>`).join('')}</div>`;
+  return `<div class="row"><h2>收入计提 · ${sess.month}</h2><span class="tag p" style="margin-left:6px">广告-API</span><span class="sp"></span><button id="back">返回列表</button></div>
+  ${steps}${[sGather,sAdjust,sManual,sPreview][step]()}`;
+}
+function aggRow(d,i,editable){
+  const est=sum(d.det,x=>x.est),adj=sum(d.det,x=>x.adj),diff=r2(adj-est);
+  let h=`<tr class="agg ${d.changed?'chg':''}"><td class="x" data-tog="${i}">${d.open?'−':'+'}</td><td>${d.contract}</td><td><span class="tag p">${d.dsp}</span></td><td><span class="ri">${d.ri}</span></td><td>-</td><td>-</td>
+    <td class="n">${fmt(sum(d.det,x=>x.actual))}</td><td class="n">${fmt(est)}</td>
+    <td class="n">${editable?`<input class="amt" data-agg="${i}" value="${adj.toFixed(2)}">`:fmt(adj)}</td>
+    ${editable?`<td class="n" style="color:${diff?'#d46b08':''}">${diff?fmt(diff):'-'}</td><td><input data-ar="${i}" value="${d.reason}" placeholder="${d.changed?'必填':'可选'}" style="width:140px;${d.changed&&!d.reason?'border-color:#ff4d4f;background:#fff2f0':''}"></td><td>${ME}</td>`:''}</tr>`;
+  if(d.open) d.det.forEach((x,j)=>h+=`<tr class="det"><td></td><td>${d.contract}</td><td>${d.dsp}</td><td></td><td>${x.country}</td><td>${x.media}</td><td class="n">${fmt(x.actual)}</td><td class="n">${fmt(x.est)}</td>
+    <td class="n">${editable?`<input class="amt" data-det="${i}-${j}" value="${x.adj.toFixed(2)}">`:fmt(x.adj)}</td>${editable?`<td class="n">${x.adj-x.est?fmt(r2(x.adj-x.est)):'-'}</td><td></td><td>${ME}</td>`:''}</tr>`);
+  return h;
+}
+function sGather(){
+  setTimeout(()=>bar(`<button id="regather">⟳ 重新取数</button>`,`<button class="pri" data-go="1">下一步</button>`));
+  return `<div class="alert ok">✔ 取数完成，共 ${drafts.length} 条聚合数据（聚合维度：合同ID × DSP）</div>
+  <table><tr><th>合同ID</th><th>DSP<span class="new">新</span></th><th>收入指标<span class="new">新</span></th><th class="n">实际收入（美金）</th><th class="n">系统预估（美金）</th><th class="n">调整后预估（美金）</th></tr>
+  ${drafts.map(d=>`<tr><td>${d.contract}</td><td><span class="tag p">${d.dsp}</span></td><td><span class="ri">${d.ri}</span></td><td class="n">${fmt(sum(d.det,x=>x.actual))}</td><td class="n">${fmt(sum(d.det,x=>x.est))}</td><td class="n">${fmt(sum(d.det,x=>x.adj))}</td></tr>`).join('')}</table><div class="pg">共 ${drafts.length} 条 <b>1</b> 20 条/页</div>`;
+}
+function sAdjust(){
+  const dirty=drafts.filter(d=>d.changed&&!d.saved).length;
+  setTimeout(()=>bar(`<button data-go="0">← 上一步</button>`,`<span class="err" id="adjErr" style="min-height:0"></span><button id="saveAdj" ${dirty?'class="pri"':'disabled'}>保存调整${dirty?`（${dirty}）`:''}</button><button class="pri" id="adjNext" ${dirty?'disabled title="请先保存调整"':''}>下一步</button>`));
+  return `<div class="row" style="margin-bottom:10px"><button>⟳ 重新计算</button><button>⇩ 下载当前数据</button><span class="sp"></span><span class="muted">在 合同×DSP 聚合行填总额（美金），按明细实际收入占比拆分，末行补差；调整过的行必填调整原因</span></div>
+  <table><tr><th></th><th>合同ID</th><th>DSP<span class="new">新</span></th><th>收入指标<span class="new">新</span></th><th>国家</th><th>媒体</th><th class="n">实际收入（美金）</th><th class="n">系统预估（美金）</th><th class="n">调整后预估（美金）</th><th class="n">差异</th><th>调整原因</th><th>计提人</th></tr>
+  ${drafts.map((d,i)=>aggRow(d,i,true)).join('')}</table><div class="pg">共 ${drafts.length} 条 <b>1</b> 20 条/页</div>`;
+}
+const MANUAL=[
+  {src:'系统',dsp:'minigo',c:'S002918',co:'MX',me:'海外联盟业务-程序化',a:920.00,e:2852.00,j:3100.00},
+  {src:'系统',dsp:'minigo',c:'S002918',co:'BR',me:'海外浏览器',a:1310.40,e:4062.24,j:4062.24},
+  {src:'系统',dsp:'minigo',c:'S002918',co:'ID',me:'海外应用商店',a:705.18,e:2186.06,j:2186.06},
+];
+function sManual(){
+  setTimeout(()=>bar(`<button data-go="1">← 上一步</button>`,`<button id="merge" class="pri">合并数据</button><button disabled title="请先点击「合并数据」合并后再进入下一步">下一步</button>`));
+  return `<div class="alert">ⓘ 本环节只会拉取在合同管理中标记为「手工计提」的数据</div>
+  <div class="alert w">有人工补充数据待合并，请点击右下角「合并数据」</div>
+  <div class="row" style="margin-bottom:10px"><button>⇩ 下载模板</button><button>系统拉数</button><button>⇧ 上传 Excel</button><button>清空人工数据</button><button>⟳ 刷新</button></div>
+  <table><tr><th>来源</th><th>DSP<span class="new">新</span></th><th>合同ID</th><th>收入指标<span class="new">新</span></th><th>国家</th><th>媒体</th><th class="n">实际收入（美金）</th><th class="n">系统预估（美金）</th><th class="n">调整后预估（美金）</th><th>操作</th></tr>
+  ${MANUAL.map(r=>`<tr><td>${r.src}</td><td><span class="tag p">${r.dsp}</span></td><td>${r.c}</td><td><span class="ri">${RI(r.c)}</span></td><td>${r.co}</td><td>${r.me}</td><td class="n">${fmt(r.a)}</td><td class="n">${fmt(r.e)}</td><td class="n"><input class="amt" value="${r.j.toFixed(2)}"></td><td><button class="link">保存</button><button class="link d">删除</button></td></tr>`).join('')}</table>
+  <div class="pg">共 ${MANUAL.length} 条 <b>1</b> 20 条/页</div>
+  <div class="muted" style="font-size:12px;margin-top:6px">模板列：DSP / 合同ID / 国家 / 媒体 / 实际收入(USD) / 调整后预估(USD) / 调整原因（补计提在调整后预估后多一列 系统预估(USD)）</div>`;
+}
+function previewData(){
+  const m={};
+  drafts.forEach(d=>d.det.forEach(x=>{const c=(m[d.contract]=m[d.contract]||{code:d.contract,cur:d.cur,det:{}});const k=x.country+'|'+x.media;
+    (c.det[k]=c.det[k]||{country:x.country,media:x.media,amt:0});c.det[k].amt+=x.adj}));
+  MANUAL.forEach(r=>{const cc=contractsApi.find(x=>x.code===r.c);const c=(m[r.c]=m[r.c]||{code:r.c,cur:cc.cur,det:{}});const k=r.co+'|'+r.me;(c.det[k]=c.det[k]||{country:r.co,media:r.me,amt:0});c.det[k].amt+=r.j});
+  return Object.values(m).map(c=>{c.det=Object.values(c.det).filter(x=>x.amt>0);c.amt=sum(c.det,x=>x.amt);return c});
+}
+function sPreview(){
+  const p=previewData(),items=sum(p,c=>c.det.length),amt=sum(p,c=>c.amt),dsp=new Set([...drafts.map(d=>d.dsp),...MANUAL.map(r=>r.dsp)]).size;
+  setTimeout(()=>bar(`<button data-go="2">← 上一步</button>`,`<button class="pri" id="push">☁ 确认推送</button>`));
+  let rows='';
+  p.forEach(c=>{rows+=`<tr><td class="x" data-pv="${c.code}">${pv[c.code]?'−':'+'}</td><td>${c.code}</td><td><span class="ri">${RI(c.code)}</span></td><td>${c.det.length}</td><td class="n">${fmt(c.amt)}</td><td class="n">${fmt(c.amt*RATE[c.cur])} <span class="muted">${c.cur}</span></td><td>${ME}</td><td>${sess.month}</td><td></td></tr>`;
+    if(pv[c.code]) rows+=`<tr><td></td><td colspan="8" style="padding:0 0 8px 0;background:#fafafa"><table><tr><th>合同ID</th><th>国家</th><th>媒体</th><th class="n">收入计提金额（美金）</th><th class="n">收入计提金额（结算币种）</th><th>计提人</th><th>计提年月</th><th>备注</th></tr>
+      ${c.det.map(x=>`<tr><td>${c.code}</td><td>${x.country}</td><td>${x.media}</td><td class="n">${fmt(x.amt)}</td><td class="n">${fmt(x.amt*RATE[c.cur])}</td><td>${ME}</td><td>${sess.month}</td><td>-</td></tr>`).join('')}</table></td></tr>`});
+  return `<div class="alert">ⓘ 以下是本次要推送的预估收入计提数据，按合同聚合，展开为 国家×媒体 明细（同一合同多个 DSP 已合并）。请确认后点击推送。</div>
+  <div class="stat"><div><small>合同数（去重）</small><b>${p.length} 个</b></div><div><small>DSP 数（去重）<span class="new">新</span></small><b>${dsp} 个</b></div><div><small>数据条数</small><b>${items} 条</b></div><div><small>收入计提金额（美金）</small><b>$ ${fmt(amt)}</b></div></div>
+  <table><tr><th></th><th>合同ID</th><th>收入指标<span class="new">新</span></th><th>数据条数</th><th class="n">收入计提金额（美金）</th><th class="n">收入计提金额（结算币种）</th><th>计提人</th><th>计提年月</th><th>备注</th></tr>${rows}</table>
+  <div class="pg">共 ${p.length} 条 <b>1</b> 20 条/页</div>`;
+}
+
+// ================= 合同管理 =================
+function rContract(){
+  const b=curTab('contract'),api=b==='api';
+  const list=api?contractsApi:contractsMiads;
+  return `<h2>合同管理</h2>${bizTabs('contract','收入合同-')}
+  <div class="grid" style="margin-bottom:12px">
+    <div class="fi"><label>${api?'合同ID/DSP：':'合同ID/账户ID：'}</label><input placeholder="${api?'合同ID/DSP 名称':'合同ID/账户ID'}"></div>
+    <div class="fi"><label>销售归属：</label><select><option>销售归属</option></select></div>
+    <div class="fi"><label>计提人：</label><select><option>搜索...</option></select></div>
+    <div class="fi"><label>结算币种：</label><select><option>全部</option></select></div>
+    <div class="fi"><label>计提标记：</label><select><option>全部</option></select></div>
+    ${api?`<div class="fi"><label>收入指标：</label><select><option>全部</option></select></div>`:''}
+    ${api?'':`<div class="fi"><label>是否赔付：</label><select><option>全部</option></select></div><div class="fi"><label>是否返点：</label><select><option>全部</option></select></div>`}
+  </div>
+  <div class="row" style="margin-bottom:10px"><button class="pri" id="sync">⟳ 同步合同数据</button><button ${sel.size?'':'disabled'}>批量改计提人${sel.size?`(${sel.size})`:''}</button><span class="sp"></span><button class="pri">查 询</button><button>重 置</button></div>
+  <table><tr><th style="width:30px"><input type="checkbox" style="width:auto;height:auto"></th><th>合同ID</th><th>${api?'DSP 名称<span class="new">新</span>':'账户ID'}</th><th>销售归属</th><th>结算币种</th><th>计提人</th><th>计提标记</th>${api?'<th>收入指标<span class="new">新</span></th>':''}${api?'':'<th>是否赔付</th><th>是否返点</th>'}<th>更新时间</th><th>更新人</th></tr>
+  ${list.map((c,i)=>`<tr><td><input type="checkbox" style="width:auto;height:auto" ${api?`data-sel="${i}"`:''} ${api&&sel.has(i)?'checked':''}></td><td>${c.code}</td><td>${api?`<div class="ms" data-ms="${i}">${c.dsp.map(d=>`<span class="tag p">${d}</span>`).join('')}<span class="caret">▾</span></div>${msOpen===i?msPop(c):''}`:c.acc}</td><td>${c.sales}</td><td>${c.cur}</td><td>${c.by}</td>
+    <td><select style="width:96px" data-flag="${b}:${i}">${['系统计提','手工计提','不计提'].map(o=>`<option ${c.flag===o?'selected':''}>${o}</option>`).join('')}</select></td>
+    ${api?`<td><select style="width:120px">${['revenue_valid','revenue','revenue_1h','revenue_3h','revenue_12h'].map(o=>`<option ${(c.ri||'revenue_valid')===o?'selected':''}>${o}</option>`).join('')}</select></td>`:''}
+    ${api?'':`<td><select style="width:60px"><option>${c.ind}</option></select></td><td><select style="width:60px"><option>${c.reb}</option></select></td>`}<td>${c.t}</td><td>${c.ub}</td></tr>`).join('')}</table>
+  ${api?'<div class="muted" style="margin-top:8px">新同步合同：DSP 名称默认取 CRM 客户简称，收入指标默认 revenue_valid。DSP 名称、计提标记、收入指标在列表中直接修改；以计提平台为准，再次同步不覆盖。</div>':''}`;
+}
+// ================= 计提记录 =================
+function rRecDetail(r){
+  const C=r.cs,fail=C.filter(c=>c.st==='失败'),ok=C.length-fail.length;
+  return `<div class="row"><h2>计提记录详情 · ${r.id}</h2><span class="sp"></span><button id="rback">返回列表</button></div>
+  <div class="row" style="margin:10px 0"><button class="pri">重试推送（${fail.length} 个失败合同）</button><button>下载底稿</button><button>CRM附件</button><button>下载失败明细</button></div>
+  <table style="margin-bottom:12px"><tr><th>计提月份</th><td>${r.month}</td><th>计提类型</th><td>${r.type}</td><th>计提人</th><td>${r.by}</td></tr>
+  <tr><th>推送CRM状态</th><td><span class="tag w">${r.st}</span></td><th>合同</th><td>成功 ${ok} / 失败 ${fail.length} / 共 ${C.length}</td><th>DSP 数</th><td>${r.d}</td></tr></table>
+  <div class="alert w">⚠ ${fail.length} 个合同推送失败，这些合同在 CRM 中查不到本次计提。请修正失败原因后对失败合同重新计提，或全部重新计提覆盖。</div>
+  <b style="display:block;margin:6px 0">合同推送结果</b>
+  <table><tr><th>合同ID</th><th>推送状态</th><th class="n">明细数</th><th>失败原因汇总</th><th class="n">计提金额（美金）</th><th></th></tr>
+  ${C.map(c=>`<tr style="${rf.c===c.code?'background:#e6f4ff':''}"><td>${c.code}</td><td><span class="tag ${c.st==='成功'?'ok':'e'}">${c.st}</span></td><td class="n">${c.n}</td><td style="color:${c.why?'#cf1322':''}">${c.why||'-'}</td><td class="n">${fmt(c.amt)}</td><td>${c.st==='失败'?`<button class="link" data-rc="${c.code}">查看明细</button>`:''}</td></tr>`).join('')}</table>
+  <b style="display:block;margin:16px 0 6px">失败明细</b>
+  ${!fail.length?'<div class="alert ok">全部推送成功，明细请下载「CRM附件」查看</div>':`<div class="row" style="margin-bottom:8px"><span class="muted">合同：</span><select id="rfc" style="width:160px"><option value="">全部失败合同</option>${fail.map(c=>`<option ${rf.c===c.code?'selected':''}>${c.code}</option>`).join('')}</select>
+  <label style="display:flex;gap:4px;align-items:center;margin-left:12px"><input type="checkbox" id="rfw" style="width:auto;height:auto" ${rf.w?'checked':''}>只看有失败原因</label>${rf.c?`<button class="link" id="rfx">清空筛选</button>`:''}</div>
+  <table><tr><th>合同ID</th><th>国家</th><th>媒体</th><th class="n">计提金额（美金）</th><th>推送状态</th><th>失败原因</th></tr>
+  ${r.dt.filter(x=>(!rf.c||x[0]===rf.c)&&(!rf.w||x[5])).map(x=>`<tr><td>${x[0]}</td><td>${x[1]}</td><td>${x[2]}</td><td class="n">${fmt(x[3])}</td><td><span class="tag ${x[4]==='成功'?'ok':'e'}">${x[4]==='成功'?'成功':'推送失败'}</span></td><td style="color:#cf1322">${x[5]||'<span class="muted">-</span>'}</td></tr>`).join('')}</table>`}`;
+}
+let recOpen=null,rf={c:'',w:false};
+function rRecords(){
+  if(recOpen) return rRecDetail(records.find(r=>r.id===recOpen));
+  const b=curTab('records'),api=b==='api',list=records.filter(r=>r.biz===b);
+  return `<h2>计提记录</h2>${bizTabs('records')}
+  <table><tr><th>记录ID</th><th>计提月份</th><th>计提类型</th><th>计提人</th><th class="n">合同数</th>${api?'<th class="n">DSP 数<span class="new">新</span></th>':''}<th class="n">数据条数</th><th class="n">金额（美金）</th><th>推送CRM状态</th><th>计提时间</th><th>操作</th></tr>
+  ${list.map(r=>`<tr><td>${r.id}</td><td>${r.month}</td><td>${r.type}</td><td>${r.by}</td><td class="n">${r.c}</td>${api?`<td class="n">${r.d}</td>`:''}<td class="n">${r.i}</td><td class="n">${fmt(r.amt)}</td><td><span class="tag ${r.st==='推送成功'?'ok':r.st==='推送中'?'b':r.st==='推送失败'?'e':'w'}">${r.st}</span></td><td>${r.t}</td><td><button class="link" data-rd="${r.id}">详情</button></td></tr>`).join('')}</table>`;
+}
+// ================= 配置管理 =================
+function rConfig(){
+  return `<h2>配置管理</h2><div class="tabs"><div class="on">计提公式</div><div>汇率管理</div></div>
+  <div class="alert">ⓘ 公式用于计算当月预估收入。一条业务线只能适用一个公式，保存后从下一次取数生效。</div>
+  <table><tr><th>公式类型</th><th>公式</th><th>参数</th><th>适用业务线<span class="new">可编辑</span></th><th>状态</th><th>更新人</th><th>更新时间</th><th>操作</th></tr>
+  ${formulas.map((f,i)=>`<tr><td><b>${f.type}</b></td><td><span class="tag">${EXPR[f.type]}</span></td><td>${f.x?`X = ${f.x} 天`:'-'}</td>
+    <td>${f.biz.length?f.biz.map(b=>`<span class="tag p">${b}</span>`).join(''):'<span class="muted">-</span>'}</td>
+    <td>${f.biz.length?'<span style="color:#52c41a">● 生效中</span>':'<span class="muted">● 未使用</span>'}</td><td>${f.upd}</td><td>${f.t}</td>
+    <td><button class="link" data-fe="${i}">编辑</button></td></tr>`).join('')}</table>
+  <div class="alert" style="margin-top:12px">参数 X 说明：X 表示用于计算日均收入的天数范围。值越大预测越稳定但响应变化越慢；值越小响应越快但可能波动较大；建议设置为 5-7 天。</div>`;
+}
+function rUser(){
+  const T=(b,ops)=>`<div style="margin:4px 0 4px 20px">☑ ${BIZ[b]}：${ops}</div>`;
+  return `<h2>用户管理</h2><div class="tabs"><div>用户</div><div class="on">角色</div><div>离职报警</div></div>
+  <div class="alert">权限按业务线 Tab 拆分，每个 Tab 独立权限码；后端接口同步按业务线校验。存量角色迁移为广告-Miads 权限。右下角切换演示角色可看效果。</div>
+  <b>收入计提</b>${T('miads','查看 / 计提操作 / 推送 / 导出')}${T('api','查看 / 计提操作 / 推送 / 导出')}
+  <b>合同管理</b>${T('miads','查看 / 同步 / 编辑 / 导出')}${T('api','查看 / 同步 / 编辑 / 导出')}
+  <b>计提记录</b>${T('miads','查看 / 导出')}${T('api','查看 / 导出')}`;
+}
+
+// ================= 交互 =================
+function modal(h){$('#modal').innerHTML=h;$('#mask').classList.add('on')}
+function closeModal(){$('#mask').classList.remove('on')}
+$('#mask').onclick=e=>{if(e.target.id==='mask')closeModal()};
+function splitTotal(d,total){const pos=d.det.map(x=>Math.max(x.actual,0)),P=sum(pos,x=>x);let acc=0;
+  d.det.forEach((x,j)=>{if(j===d.det.length-1)x.adj=r2(total-acc);else{x.adj=r2(P?total*pos[j]/P:total/d.det.length);acc+=x.adj}})}
+function bind(){
+  const all=(s,f)=>document.querySelectorAll(s).forEach(f);const on=(id,f)=>{const e=$('#'+id);if(e)e.onclick=f};
+  all('[data-tab]',e=>e.onclick=()=>{const [k,b]=e.dataset.tab.split(':');tab[k]=b;render()});
+  all('[data-go]',e=>e.onclick=()=>{step=+e.dataset.go;render()});
+  on('start',()=>{if(tab.accrual==='miads'){modal(`<h3>广告-Miads</h3><p>广告-Miads 计提流程与现网一致，本 demo 只演示广告-API。</p><div class="foot"><button class="pri" onclick="closeModal()">知道了</button></div>`);return}
+    buildDrafts();sess={month:'2026-12'};step=0;pv={};render()});
+  all('[data-cont]',e=>e.onclick=()=>{if(tab.accrual==='miads')return;buildDrafts();sess={month:sessions.find(s=>s.id===e.dataset.cont).month};step=1;pv={};render()});
+  all('[data-void]',e=>e.onclick=()=>modal(`<h3>确认作废？</h3><p>作废后该计提会话不可恢复。</p><div class="foot"><button onclick="closeModal()">取消</button><button class="pri" id="vok">作废</button></div>`)||($('#vok').onclick=()=>{sessions=sessions.filter(s=>s.id!==e.dataset.void);closeModal();render()}));
+  on('back',()=>{sess=null;render()});
+  setTimeout(()=>{on('regather',()=>{buildDrafts();render()});on('push',doPush);on('saveAdj',()=>{if(check()){drafts.forEach(d=>d.saved=true);render()}});on('adjNext',()=>{if(check()){step=2;render()}});all('[data-go]',e=>e.onclick=()=>{step=+e.dataset.go;render()})});
+  all('[data-tog]',e=>e.onclick=()=>{const d=drafts[+e.dataset.tog];d.open=!d.open;render()});
+  all('[data-pv]',e=>e.onclick=()=>{pv[e.dataset.pv]=!pv[e.dataset.pv];render()});
+  all('[data-agg]',e=>e.onchange=()=>{const d=drafts[+e.dataset.agg],v=parseFloat(e.value);if(isNaN(v)||v<0){alert('调整后预估不能为负数');return render()}splitTotal(d,v);d.changed=true;d.saved=false;d.open=true;render()});
+  all('[data-det]',e=>e.onchange=()=>{const [i,j]=e.dataset.det.split('-').map(Number),v=parseFloat(e.value);if(isNaN(v)||v<0)return render();drafts[i].det[j].adj=v;drafts[i].changed=true;drafts[i].saved=false;render()});
+  all('[data-ar]',e=>e.oninput=()=>{drafts[+e.dataset.ar].reason=e.value});
+  on('sync',()=>modal(`<h3>同步合同数据</h3><p>同步完成，共新增 1 条数据，更新 3 条数据。</p><p class="muted">只同步 CRM 三级业务线 = 广告-API 新产生的合同，DSP 名称默认取客户简称。</p><div class="foot"><button class="pri" onclick="closeModal()">知道了</button></div>`));
+  all('[data-sel]',e=>e.onchange=()=>{const i=+e.dataset.sel;e.checked?sel.add(i):sel.delete(i);render()});
+  all('[data-ms]',e=>e.onclick=()=>{msOpen=msOpen===+e.dataset.ms?null:+e.dataset.ms;render()});
+  all('[data-rd]',e=>e.onclick=()=>{recOpen=e.dataset.rd;render()});
+  on('rback',()=>{recOpen=null;rf={c:'',w:false};render()});
+  all('[data-rc]',e=>e.onclick=()=>{rf.c=e.dataset.rc;render()});
+  const rfc=$('#rfc');if(rfc)rfc.onchange=()=>{rf.c=rfc.value;render()};
+  const rfw=$('#rfw');if(rfw)rfw.onchange=()=>{rf.w=rfw.checked;render()};
+  on('rfx',()=>{rf.c='';render()});
+  all('[data-flag]',e=>e.onchange=()=>{const [b,i]=e.dataset.flag.split(':');(b==='api'?contractsApi:contractsMiads)[+i].flag=e.value});
+  all('[data-fe]',e=>e.onclick=()=>fModal(+e.dataset.fe));
+}
+function dspModal(){
+  let picked=new Set();
+  const draw=q=>SEATS.filter(x=>!q||(x[0]+x[1]).toLowerCase().includes(q.toLowerCase())).map(x=>`<label style="display:flex;gap:8px;align-items:center;padding:3px 0;cursor:pointer"><input type="checkbox" style="width:auto;height:auto" data-seat="${x[0]}" ${picked.has(x[0])?'checked':''}>${x[0]} - ${x[1]}${x[2]?'':' <span class="muted">（已关闭）</span>'}</label>`).join('');
+  modal(`<h3>批量更改DSP名称</h3><div class="alert">已选 ${sel.size} 个合同，确认后这些合同的 DSP 名称替换为所选 DSP</div>
+  <div class="f"><label><em>*</em>DSP 名称（可多选）</label><input id="sq" placeholder="搜索 seat / 公司名称"></div>
+  <div id="sl" style="max-height:220px;overflow:auto;border:1px solid #f0f0f0;border-radius:4px;padding:4px 10px">${draw('')}</div>
+  <div class="muted" style="font-size:12px;margin-top:6px">选项来自丘比特 DSP 列表（含已关闭）。修改从下一次取数生效。</div>
+  <div class="err" id="derr"></div>
+  <div class="foot"><button onclick="closeModal()">取消</button><button class="pri" id="dok">确认更改</button></div>`);
+  const bindL=()=>document.querySelectorAll('[data-seat]').forEach(e=>e.onchange=()=>{e.checked?picked.add(e.dataset.seat):picked.delete(e.dataset.seat)});bindL();
+  $('#sq').oninput=e=>{$('#sl').innerHTML=draw(e.target.value);bindL()};
+  $('#dok').onclick=()=>{if(!picked.size)return $('#derr').textContent='请至少选择一个 DSP';
+    sel.forEach(i=>{contractsApi[i].dsp=[...picked];contractsApi[i].t='2026-12-11 20:30';contractsApi[i].ub=ME});sel.clear();closeModal();render()};
+}
+function check(){const bad=drafts.filter(d=>d.changed&&!d.reason.trim());if(bad.length){const e=$('#adjErr');if(e)e.textContent='请填写调整原因：'+bad.map(d=>d.contract+' × '+d.dsp).join('、');return false}return true}
+function doPush(){
+  const p=previewData(),items=sum(p,c=>c.det.length),amt=sum(p,c=>c.amt),dsp=new Set(drafts.map(d=>d.dsp)).size;
+  modal(`<h3>确认推送？</h3><p>合同数 ${p.length} ｜ DSP 数 ${dsp} ｜ 数据条数 ${items} ｜ 金额 $ ${fmt(amt)}</p><p class="muted">推送至 CRM 按 合同 × 国家 × 媒体；飞书通知展示同样的汇总。</p><div class="foot"><button onclick="closeModal()">取消</button><button class="pri" id="pok">确认</button></div>`);
+  $('#pok').onclick=()=>{records.unshift({id:'R20261211001',biz:'api',month:sess.month,type:'收入计提',by:ME,c:p.length,d:dsp,i:items,amt,st:'推送成功',t:'2026-12-11 20:30'});closeModal();sess=null;page='records';tab.records='api';render()};
+}
+function fModal(idx){
+  const f=formulas[idx];
+  const owner=b=>formulas.find((o,j)=>j!==idx&&o.biz.includes(b));
+  modal(`<h3>编辑计提公式 · ${f.type}</h3>
+  <div class="f"><label>公式</label><div class="muted">${EXPR[f.type]}</div></div>
+  ${f.x!==null?`<div class="f"><label><em>*</em>参数 X（1-10 天）</label><input id="mx" type="number" value="${f.x}"></div>`:''}
+  <div class="f"><label>适用业务线（可多选）</label><div>${BIZ_ALL.map(b=>{const o=owner(b);return `<label style="display:inline-flex;gap:4px;align-items:center;margin:2px 14px 2px 0;cursor:pointer"><input type="checkbox" style="width:auto;height:auto" data-b="${b}" ${f.biz.includes(b)?'checked':''}>${b}${o?`<span class="muted" style="font-size:11px">（当前：${o.type}）</span>`:''}</label>`}).join('')}</div></div>
+  <div class="muted" style="font-size:12px">一条业务线只能适用一个公式；勾选已在其他公式中的业务线，保存后将从原公式移到本公式。</div>
+  <div class="err" id="merr"></div>
+  <div class="foot"><button onclick="closeModal()">取消</button><button class="pri" id="mok">保存</button></div>`);
+  $('#mok').onclick=()=>{
+    const x=f.x!==null?+$('#mx').value:null;
+    if(x!==null&&(x<1||x>10))return $('#merr').textContent='参数 X 必须在 1-10 之间';
+    const picked=[...document.querySelectorAll('[data-b]')].filter(e=>e.checked).map(e=>e.dataset.b);
+    const lost=['广告-Miads','广告-API'].filter(b=>f.biz.includes(b)&&!picked.includes(b));
+    if(lost.length)return $('#merr').textContent=`${lost.join('、')} 已接入计提，必须适用一个公式，请在其他公式中勾选后再取消`;
+    formulas.forEach((o,j)=>{if(j!==idx)o.biz=o.biz.filter(b=>!picked.includes(b))});
+    Object.assign(f,{x,biz:picked,upd:ME,t:'2026-12-11 20:30'});closeModal();render()};
+}
+document.querySelectorAll('aside a').forEach(a=>a.onclick=()=>{page=a.dataset.p;sess=null;render()});
+$('#roleSel').onchange=e=>{role=e.target.value;sess=null;render()};
+const SHOT=location.hash.slice(1);
+if(SHOT){document.head.insertAdjacentHTML('beforeend','<style>.demo{display:none!important}</style>');
+  const prep=()=>{buildDrafts();sess={month:'2026-12'};pv={};const d=drafts[0];splitTotal(d,40000);d.changed=true;d.saved=true;d.reason='按对方系统数据调整';};
+  if(SHOT==='contract'){page='contract'}
+  if(SHOT==='dsp'){page='contract';msOpen=1}
+  if(SHOT==='gather'){page='accrual';buildDrafts();sess={month:'2026-12'};step=0}
+  if(SHOT==='adjust'){page='accrual';prep();drafts[0].open=true;step=1}
+  if(SHOT==='manual'){page='accrual';prep();step=2}
+  if(SHOT==='preview'){page='accrual';prep();step=3;pv={'S003375':true}}
+  if(SHOT==='start'){page='accrual'}
+  if(SHOT==='record'){prep();const p=previewData();const fail={'S001283':'媒体名称不存在 1 条','C2023-0412':'签名校验失败'};
+    const cs=p.map(c=>({code:c.code,st:fail[c.code]?'失败':'成功',n:c.det.length,why:fail[c.code]||'',amt:c.amt})).sort((a,b)=>(a.st==='失败'?0:1)-(b.st==='失败'?0:1));
+    const dt=[];p.filter(c=>fail[c.code]).forEach(c=>c.det.forEach((x,j)=>dt.push([c.code,x.country,x.media,x.amt,'失败',c.code==='S001283'&&j===0?'媒体名称不存在':''])));
+    records.unshift({id:'R20261211001',biz:'api',month:'2026-12',type:'收入计提',by:ME,c:p.length,d:7,i:sum(p,c=>c.det.length),amt:sum(p,c=>c.amt),st:'部分合同失败',t:'2026-12-11 20:30',cs,dt});
+    sess=null;page='records';recOpen='R20261211001';rf.c='S001283'}
+  if(SHOT==='records'){page='records'}
+}
+render();
+</script>
+</body>
+</html>
