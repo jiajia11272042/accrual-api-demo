@@ -408,12 +408,10 @@ function doPush(){
   $('#pok').onclick=()=>{records.unshift({id:'R20261211001',biz:'api',month:sess.month,type:'收入计提',by:ME,c:p.length,d:dsp,i:items,amt,st:'推送中',t:'2026-12-11 20:30'});submitted('R20261211001')};
 }
 function submitted(id){
-  modal(`<h3>✅ 已提交推送</h3><p>记录ID：<b>${id}</b> <button class="link" id="cp">复制</button></p>
-  <p class="muted">推送为异步处理，结果请到「计提记录」查看，完成后也会飞书通知你。</p>
+  modal(`<h3>✅ 已提交推送</h3><p class="muted">已提交推送，推送结果请到「计提记录」查看，完成后也会飞书通知你。</p>
   <div class="foot"><button id="bl">返回列表</button><button class="pri" id="gr">查看计提记录</button></div>`);
   $('#bl').onclick=()=>{closeModal();sess=null;render()};
-  $('#gr').onclick=()=>{closeModal();sess=null;page='records';tab.records='api';recQ=id;render()};
-  $('#cp').onclick=()=>{$('#cp').textContent='已复制'};
+  $('#gr').onclick=()=>{closeModal();sess=null;page='records';tab.records='api';render()};
 }
 function fModal(idx){
   const f=formulas[idx];
