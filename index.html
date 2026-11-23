@@ -323,11 +323,13 @@ function rRecDetail(r){
   <table><tr><th>合同ID</th><th>国家</th><th>媒体</th><th class="n">计提金额（美金）</th><th>推送状态</th><th>失败原因</th></tr>
   ${r.dt.filter(x=>(!rf.c||x[0]===rf.c)&&(!rf.w||x[5])).map(x=>`<tr><td>${x[0]}</td><td>${x[1]}</td><td>${x[2]}</td><td class="n">${fmt(x[3])}</td><td><span class="tag ${x[4]==='成功'?'ok':'e'}">${x[4]==='成功'?'成功':'推送失败'}</span></td><td style="color:#cf1322">${x[5]||'<span class="muted">-</span>'}</td></tr>`).join('')}</table>`}`;
 }
-let recOpen=null,rf={c:'',w:false};
+let recQ='',recOpen=null,rf={c:'',w:false};
 function rRecords(){
   if(recOpen) return rRecDetail(records.find(r=>r.id===recOpen));
-  const b=curTab('records'),api=b==='api',list=records.filter(r=>r.biz===b);
+  const b=curTab('records'),api=b==='api',list=records.filter(r=>r.biz===b&&(!recQ||r.id===recQ));
   return `<h2>计提记录</h2>${bizTabs('records')}
+  <div class="grid" style="margin-bottom:12px"><div class="fi"><label>记录ID<span class="new">新</span>：</label><input id="rq" value="${recQ}" placeholder="记录ID"></div>
+  <div class="fi"><label>计提类型：</label><select><option>全部</option></select></div><div class="fi"><label>计提月份：</label><select><option>全部</option></select></div><div class="fi"><label>推送CRM状态：</label><select><option>全部</option></select></div></div>
   <table><tr><th>记录ID</th><th>计提月份</th><th>计提类型</th><th>计提人</th><th class="n">合同数</th>${api?'<th class="n">DSP 数<span class="new">新</span></th>':''}<th class="n">数据条数</th><th class="n">金额（美金）</th><th>推送CRM状态</th><th>计提时间</th><th>操作</th></tr>
   ${list.map(r=>`<tr><td>${r.id}</td><td>${r.month}</td><td>${r.type}</td><td>${r.by}</td><td class="n">${r.c}</td>${api?`<td class="n">${r.d}</td>`:''}<td class="n">${r.i}</td><td class="n">${fmt(r.amt)}</td><td><span class="tag ${r.st==='推送成功'?'ok':r.st==='推送中'?'b':r.st==='推送失败'?'e':'w'}">${r.st}</span></td><td>${r.t}</td><td><button class="link" data-rd="${r.id}">详情</button></td></tr>`).join('')}</table>`;
 }
@@ -376,6 +378,7 @@ function bind(){
   all('[data-sel]',e=>e.onchange=()=>{const i=+e.dataset.sel;e.checked?sel.add(i):sel.delete(i);render()});
   all('[data-ms]',e=>e.onclick=()=>{msOpen=msOpen===+e.dataset.ms?null:+e.dataset.ms;render()});
   all('[data-rd]',e=>e.onclick=()=>{recOpen=e.dataset.rd;render()});
+  const rq=$('#rq');if(rq)rq.onchange=()=>{recQ=rq.value.trim();render()};
   on('rback',()=>{recOpen=null;rf={c:'',w:false};render()});
   all('[data-rc]',e=>e.onclick=()=>{rf.c=e.dataset.rc;render()});
   const rfc=$('#rfc');if(rfc)rfc.onchange=()=>{rf.c=rfc.value;render()};
@@ -402,7 +405,15 @@ function check(){const bad=drafts.filter(d=>d.changed&&!d.reason.trim());if(bad.
 function doPush(){
   const p=previewData(),items=sum(p,c=>c.det.length),amt=sum(p,c=>c.amt),dsp=new Set(drafts.map(d=>d.dsp)).size;
   modal(`<h3>确认推送？</h3><p>合同数 ${p.length} ｜ DSP 数 ${dsp} ｜ 数据条数 ${items} ｜ 金额 $ ${fmt(amt)}</p><p class="muted">推送至 CRM 按 合同 × 国家 × 媒体；飞书通知展示同样的汇总。</p><div class="foot"><button onclick="closeModal()">取消</button><button class="pri" id="pok">确认</button></div>`);
-  $('#pok').onclick=()=>{records.unshift({id:'R20261211001',biz:'api',month:sess.month,type:'收入计提',by:ME,c:p.length,d:dsp,i:items,amt,st:'推送成功',t:'2026-12-11 20:30'});closeModal();sess=null;page='records';tab.records='api';render()};
+  $('#pok').onclick=()=>{records.unshift({id:'R20261211001',biz:'api',month:sess.month,type:'收入计提',by:ME,c:p.length,d:dsp,i:items,amt,st:'推送中',t:'2026-12-11 20:30'});submitted('R20261211001')};
+}
+function submitted(id){
+  modal(`<h3>✅ 已提交推送</h3><p>记录ID：<b>${id}</b> <button class="link" id="cp">复制</button></p>
+  <p class="muted">推送为异步处理，结果请到「计提记录」查看，完成后也会飞书通知你。</p>
+  <div class="foot"><button id="bl">返回列表</button><button class="pri" id="gr">查看计提记录</button></div>`);
+  $('#bl').onclick=()=>{closeModal();sess=null;render()};
+  $('#gr').onclick=()=>{closeModal();sess=null;page='records';tab.records='api';recQ=id;render()};
+  $('#cp').onclick=()=>{$('#cp').textContent='已复制'};
 }
 function fModal(idx){
   const f=formulas[idx];
@@ -440,7 +451,8 @@ if(SHOT){document.head.insertAdjacentHTML('beforeend','<style>.demo{display:none
     const dt=[];p.filter(c=>fail[c.code]).forEach(c=>c.det.forEach((x,j)=>dt.push([c.code,x.country,x.media,x.amt,'失败',c.code==='S001283'&&j===0?'媒体名称不存在':''])));
     records.unshift({id:'R20261211001',biz:'api',month:'2026-12',type:'收入计提',by:ME,c:p.length,d:7,i:sum(p,c=>c.det.length),amt:sum(p,c=>c.amt),st:'部分合同失败',t:'2026-12-11 20:30',cs,dt});
     sess=null;page='records';recOpen='R20261211001';rf.c='S001283'}
-  if(SHOT==='records'){page='records'}
+  if(SHOT==='records'){page='records';records.unshift({id:'R20261211001',biz:'api',month:'2026-12',type:'收入计提',by:ME,c:4,d:7,i:16,amt:253130.13,st:'推送中',t:'2026-12-11 20:30'});recQ='R20261211001'}
+  if(SHOT==='submitted'){page='accrual';prep();step=3;setTimeout(()=>submitted('R20261211001'),0)}
 }
 render();
 </script>
