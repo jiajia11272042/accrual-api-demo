@@ -328,8 +328,7 @@ function rRecords(){
   if(recOpen) return rRecDetail(records.find(r=>r.id===recOpen));
   const b=curTab('records'),api=b==='api',list=records.filter(r=>r.biz===b&&(!recQ||r.id===recQ));
   return `<h2>计提记录</h2>${bizTabs('records')}
-  <div class="grid" style="margin-bottom:12px"><div class="fi"><label>记录ID<span class="new">新</span>：</label><input id="rq" value="${recQ}" placeholder="记录ID"></div>
-  <div class="fi"><label>计提类型：</label><select><option>全部</option></select></div><div class="fi"><label>计提月份：</label><select><option>全部</option></select></div><div class="fi"><label>推送CRM状态：</label><select><option>全部</option></select></div></div>
+  <div class="grid" style="margin-bottom:12px"><div class="fi"><label>计提类型：</label><select><option>全部</option></select></div><div class="fi"><label>计提月份：</label><select><option>全部</option></select></div><div class="fi"><label>推送CRM状态：</label><select><option>全部</option></select></div></div>
   <table><tr><th>记录ID</th><th>计提月份</th><th>计提类型</th><th>计提人</th><th class="n">合同数</th>${api?'<th class="n">DSP 数<span class="new">新</span></th>':''}<th class="n">数据条数</th><th class="n">金额（美金）</th><th>推送CRM状态</th><th>计提时间</th><th>操作</th></tr>
   ${list.map(r=>`<tr><td>${r.id}</td><td>${r.month}</td><td>${r.type}</td><td>${r.by}</td><td class="n">${r.c}</td>${api?`<td class="n">${r.d}</td>`:''}<td class="n">${r.i}</td><td class="n">${fmt(r.amt)}</td><td><span class="tag ${r.st==='推送成功'?'ok':r.st==='推送中'?'b':r.st==='推送失败'?'e':'w'}">${r.st}</span></td><td>${r.t}</td><td><button class="link" data-rd="${r.id}">详情</button></td></tr>`).join('')}</table>`;
 }
